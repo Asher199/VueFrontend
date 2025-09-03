@@ -38,7 +38,6 @@ pipeline {
                 sh 'echo "Deploying Vue app..."'
                 // For Nginx:
                 sh 'scp -o StrictHostKeyChecking=no -r dist/assets dist/favicon.ico dist/index.html itm@192.168.18.65:/var/www/html/'
-"""
             }
         }
     }
