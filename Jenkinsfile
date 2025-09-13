@@ -42,7 +42,7 @@ pipeline {
                 )]) {
                     sh '''
                         sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -r \
-                        dist/assets dist/favicon.ico dist/index2.html \
+                        dist/assets dist/favicon.ico dist/index.html \
                         $SSH_USER@192.168.49.114:/var/www/html/
                     '''
                 }
