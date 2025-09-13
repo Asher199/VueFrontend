@@ -34,11 +34,17 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                sh 'echo "Deploying Vue app..."'
-                // For Nginx:
-                sh 'scp -o StrictHostKeyChecking=no -r dist/assets dist/favicon.ico dist/index.html itm@192.168.49.114:/var/www/html/'
-            }
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'deploy-ssh', 
+            usernameVariable: 'SSH_USER',
+            passwordVariable: 'SSH_PASS'
+        )]) {
+            sh '''
+                sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -r \
+                dist/assets dist/favicon.ico dist/index.html \
+                $SSH_USER@192.168.49.114:/var/www/html/
+            '''
         }
     }
 }
