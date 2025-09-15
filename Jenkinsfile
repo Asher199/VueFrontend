@@ -2,7 +2,12 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'node22.19.0'   // Configure Node.js in Jenkins (Manage Jenkins > Global Tool Config)
+        nodejs 'node22.19.0'   // Node.js configured in Jenkins (Manage Jenkins > Global Tool Config)
+    }
+
+    environment {
+        NETLIFY_AUTH_TOKEN = credentials('netlify-auth')   // Jenkins secret text for Netlify token
+        NETLIFY_SITE_ID    = credentials('netlify-site')   // Jenkins secret text for Site ID
     }
 
     stages {
@@ -33,19 +38,15 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Netlify') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'deploy-ssh', 
-                    usernameVariable: 'SSH_USER',
-                    passwordVariable: 'SSH_PASS'
-                )]) {
-                    sh '''
-                        sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no -r \
-                        dist/assets dist/favicon.ico dist/index.html \
-                        $SSH_USER@192.168.49.114:/var/www/html/
-                    '''
-                }
+                sh '''
+                    npx netlify deploy \
+                        --auth=$NETLIFY_AUTH_TOKEN \
+                        --site=$NETLIFY_SITE_ID \
+                        --dir=dist \
+                        --prod
+                '''
             }
         }
     }
