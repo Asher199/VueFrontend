@@ -56,4 +56,4 @@ stages:
           az storage blob upload-batch \
             --account-name wepapp19 \
             --destination '$web' \
-            --source dist
+            --source $(Build.ArtifactStagingDirectory)/vue-dist
