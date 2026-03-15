@@ -18,6 +18,9 @@ stages:
   - job: BuildVue
     steps:
 
+    # Checkout GitHub repo
+    - checkout: self
+      clean: true
     - task: NodeTool@0
       inputs:
         versionSpec: '20.x'
