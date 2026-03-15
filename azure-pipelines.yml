@@ -24,6 +24,7 @@ stages:
       displayName: Install Node
 
     - script: |
+        cd $(Build.SourcesDirectory)
         npm install
         npm run build
       displayName: Build Vue App
