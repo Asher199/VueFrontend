@@ -30,26 +30,37 @@ stages:
         versionSpec: '20.x'
       displayName: 'Install Node.js'
 
-    # Build Vue app with debug
-    - script: |
-        cd $(Build.SourcesDirectory)
-        echo "Current folder:"
-        pwd
-        echo "Listing files before build:"
-        dir
-        npm install
-        npm run build
-        echo "Listing files after build:"
-        dir
-        if (Test-Path dist) { echo "dist exists!" } else { echo "dist does NOT exist!" }
+    # Build Vue app with PowerShell
+    - task: PowerShell@2
       displayName: 'Build Vue App & Verify dist'
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "Current folder:"
+          Get-Location
+          
+          Write-Host "Listing files before build:"
+          Get-ChildItem
+
+          cd "$(Build.SourcesDirectory)"
+          npm install
+          npm run build
+
+          Write-Host "Listing files after build:"
+          Get-ChildItem
+
+          if (Test-Path dist) {
+              Write-Host "dist exists!"
+          } else {
+              Write-Error "dist folder does NOT exist! Build failed."
+          }
 
     # Publish dist folder as artifact
     - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/dist'   # Must match actual dist location
-        artifact: 'vue-dist'
       displayName: 'Publish dist Artifact'
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)\dist'
+        artifact: 'vue-dist'
 
 # -----------------
 # CD STAGE
@@ -61,25 +72,25 @@ stages:
   - job: DeployToAzure
     displayName: 'Deploy to Azure Storage'
     pool:
-      name: MyLocalAgents   # Your self-hosted agent pool
+      name: MyLocalAgents
     steps:
 
-    # Download the artifact from Build stage
+    # Download artifact from Build stage
     - task: DownloadPipelineArtifact@2
+      displayName: 'Download Build Artifact'
       inputs:
         artifact: 'vue-dist'
-        path: '$(Build.ArtifactStagingDirectory)/vue-dist'
-      displayName: 'Download Build Artifact'
+        path: '$(Build.ArtifactStagingDirectory)\vue-dist'
 
-    # Deploy to Azure Storage Static Website
+    # Deploy to Azure Storage Static Website using PowerShell
     - task: AzureCLI@2
+      displayName: 'Upload to Azure Storage'
       inputs:
-        azureSubscription: 'azure-connection'   # Your Azure DevOps service connection
-        scriptType: bash
+        azureSubscription: 'azure-connection'
+        scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az storage blob upload-batch \
-            --account-name wepapp19 \
-            --destination '$web' \
-            --source $(Build.ArtifactStagingDirectory)/vue-dist
-      displayName: 'Upload to Azure Storage'
+          az storage blob upload-batch `
+            --account-name wepapp19 `
+            --destination '$web' `
+            --source "$(Build.ArtifactStagingDirectory)\vue-dist"
