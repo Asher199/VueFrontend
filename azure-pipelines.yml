@@ -91,6 +91,6 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           az storage blob upload-batch `
-            --account-name wepapp19 `
+            --account-name webapp19 `
             --destination '$web' `
             --source "$(Build.ArtifactStagingDirectory)\vue-dist"
