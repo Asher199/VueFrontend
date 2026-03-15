@@ -45,7 +45,7 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: 'vue-dist'
-        path: 'dist'
+        path: '$(Build.ArtifactStagingDirectory)/vue-dist'
 
     - task: AzureCLI@2
       inputs:
