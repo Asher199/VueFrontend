@@ -30,7 +30,7 @@ stages:
 
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: 'dist'
+        targetPath: '$(Build.SourcesDirectory)/dist'
         artifact: 'vue-dist'
 
 # -----------------
