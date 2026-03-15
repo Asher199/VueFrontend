@@ -14,46 +14,67 @@ stages:
 # CI STAGE
 # -----------------
 - stage: Build
+  displayName: 'Build Stage'
   jobs:
   - job: BuildVue
+    displayName: 'Build Vue.js App'
     steps:
 
     # Checkout GitHub repo
     - checkout: self
       clean: true
+
+    # Install Node.js
     - task: NodeTool@0
       inputs:
         versionSpec: '20.x'
-      displayName: Install Node
+      displayName: 'Install Node.js'
 
+    # Build Vue app with debug
     - script: |
         cd $(Build.SourcesDirectory)
+        echo "Current folder:"
+        pwd
+        echo "Listing files before build:"
+        dir
         npm install
         npm run build
-      displayName: Build Vue App
+        echo "Listing files after build:"
+        dir
+        if (Test-Path dist) { echo "dist exists!" } else { echo "dist does NOT exist!" }
+      displayName: 'Build Vue App & Verify dist'
 
+    # Publish dist folder as artifact
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: '$(Build.SourcesDirectory)/dist'
+        targetPath: '$(Build.SourcesDirectory)/dist'   # Must match actual dist location
         artifact: 'vue-dist'
+      displayName: 'Publish dist Artifact'
 
 # -----------------
 # CD STAGE
 # -----------------
 - stage: Deploy
+  displayName: 'Deploy Stage'
   dependsOn: Build
   jobs:
   - job: DeployToAzure
+    displayName: 'Deploy to Azure Storage'
+    pool:
+      name: MyLocalAgents   # Your self-hosted agent pool
     steps:
 
+    # Download the artifact from Build stage
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: 'vue-dist'
         path: '$(Build.ArtifactStagingDirectory)/vue-dist'
+      displayName: 'Download Build Artifact'
 
+    # Deploy to Azure Storage Static Website
     - task: AzureCLI@2
       inputs:
-        azureSubscription: 'azure-connection'
+        azureSubscription: 'azure-connection'   # Your Azure DevOps service connection
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
@@ -61,3 +82,4 @@ stages:
             --account-name wepapp19 \
             --destination '$web' \
             --source $(Build.ArtifactStagingDirectory)/vue-dist
+      displayName: 'Upload to Azure Storage'
